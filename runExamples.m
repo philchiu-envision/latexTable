@@ -164,3 +164,51 @@ input.makeCompleteLatexDocument = 1;
 
 % Now call the function to generate LaTex code:
 latex = latexTable(input);
+
+%% Example 6: Generate a long table (using longtable package)
+% Clear the selected options from previous example
+clear input;
+fprintf('\n\nExample 6: using string data that includes LaTex code in a MATLAB table\n\n');
+
+% Set up a long MATLAB table (similar to example used in MATLAB docs):
+% Please note that the resulting LaTex table is row-based, not
+% column-based. So the LaTex table is a 'transposed' copy of the MATLAB table.
+rowNames = {'x'; 'x squared'; 'x cubed'};
+xVal = (1:100)';
+xSquared = xVal.^2;
+xCubed = xVal.^3;
+T = table(xVal, xSquared, xCubed);
+
+% Now use this table as input in our input struct:
+input.data = T;
+
+% Set the row format of the data values (in this example we want to use
+% integers only):
+input.dataFormat = {'%2.3e'};
+
+% Column alignment ('l'=left-justified, 'c'=centered,'r'=right-justified):
+input.tableColumnAlignment = 'c';
+
+% Switch table borders on/off:
+input.tableBorders = 1;
+
+% Switch to generate a complete LaTex document or just a table:
+input.makeCompleteLatexDocument = 1;
+
+% Use longTable to spread over multiple pages
+input.longTable = 1;
+
+% Use booktabs too
+input.booktabs = 1;
+
+% Now call the function to generate LaTex code:
+latex = latexTable(input);
+
+% save LaTex code as file
+fid=fopen('LongTable.tex','w');
+[nrows,ncols] = size(latex);
+for row = 1:nrows
+    fprintf(fid,'%s\n',latex{row,:});
+end
+fclose(fid);
+fprintf('\n... your LaTex code has been saved as ''LongTable.tex'' in your working directory\n');

@@ -98,6 +98,9 @@ function latex = latexTable(input)
 % % Switch to generate a complete LaTex document or just a table:
 % input.makeCompleteLatexDocument = 1;
 %
+% % Switch to use `longtable` environment instead of `table`
+% input.longTable = 0;
+%
 % % % Now call the function to generate LaTex code:
 % latex = latexTable(input);
 
@@ -137,6 +140,7 @@ end
 if ~isfield(input,'tableCaption'),input.tableCaption = 'MyTableCaption';end
 if ~isfield(input,'tableLabel'),input.tableLabel = 'MyTableLabel';end
 if ~isfield(input,'makeCompleteLatexDocument'),input.makeCompleteLatexDocument = 0;end
+if ~isfield(input,'longTable'),input.longTable = 0;end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 % process table datatype
@@ -198,13 +202,22 @@ if input.transposeTable
 end
 
 % make table header lines:
+
 hLine = '\hline';
+
+
 if input.tableBorders
-    header = ['\begin{tabular}','{|',repmat([input.tableColumnAlignment,'|'],1,size(C,2)),'}'];
+    colFormatString = ['{|',repmat([input.tableColumnAlignment,'|'],1,size(C,2)),'}'];
 else
-    header = ['\begin{tabular}','{',repmat(input.tableColumnAlignment,1,size(C,2)),'}'];
+    colFormatString = ['{',repmat(input.tableColumnAlignment,1,size(C,2)),'}'];
 end
-latex = {['\begin{table}',input.tablePlacement];'\centering';header};
+
+if input.longTable
+    % use '' to enforce concatenation dir, leading to a column-aligned cell array
+    latex = {['\begin{longtable}',colFormatString];''};
+else
+    latex = {'\begin{table}';'\centering';'\begin{tabular}';colFormatString};
+end
 
 % generate table
 if input.booktabs
@@ -242,9 +255,15 @@ if input.booktabs
 end   
 
 
-% make footer lines for table:
-tableFooter = {'\end{tabular}';['\caption{',input.tableCaption,'}']; ...
-    ['\label{table:',input.tableLabel,'}'];'\end{table}'};
+% make table footer lines:
+if input.longTable
+    tableFooter = {['\caption{',input.tableCaption,'}']; ...
+        ['\label{table:',input.tableLabel,'}'];'\end{longtable}'};
+else
+    tableFooter = {'\end{tabular}';['\caption{',input.tableCaption,'}']; ...
+        ['\label{table:',input.tableLabel,'}'];'\end{table}'};
+end
+    
 if input.tableBorders
     latex = [latex;{hLine};tableFooter];
 else
@@ -258,6 +277,9 @@ if input.makeCompleteLatexDocument
     if input.booktabs
         latexHeader(end+1) = {'\usepackage{booktabs}'};
     end 
+    if input.longTable
+        latexHeader(end+1) = {'\usepackage{longtable}'};
+    end
     latexHeader(end+1) = {'\begin{document}'};
     % document footer
     latexFooter = {'\end{document}'};
